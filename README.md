@@ -1,2 +1,2 @@
 # line-bot-sample
-node.jsで LINE Bot を作るための最小構成
+node.jsで LINE BOT を作るための最小構成
