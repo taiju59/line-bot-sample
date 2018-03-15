@@ -1,7 +1,12 @@
 // import modules
 const express = require('express')
-const request = require('request')
+const axios = require('axios')
 const bodyParser = require('body-parser')
+
+axios.defaults.baseURL = 'https://api.line.me/v2/bot'
+axios.defaults.auth = {
+  bearer: 'Channel Access Token' // ここは自分のtokenに書き換える
+}
 
 // create a new express server
 const app = express()
@@ -12,27 +17,28 @@ app.use(bodyParser.urlencoded({
 })) // for parsing application/x-www-form-urlencoded
 
 app.post('/callback', (req, res) => {
-  const options = {
-    method: 'POST',
-    uri: 'https://api.line.me/v2/bot/message/reply',
-    body: {
-      replyToken: req.body.events[0].replyToken,
+  // 処理遅延の原因になるため先に返す
+  res.send('OK')
+
+  // LINE Serverへリクエスト
+  const events = req.body.events
+  for (event of events) {
+    // 非同期実行
+    axios.post('/message/reply', {
+      replyToken: event.replyToken,
       messages: [{
         type: 'text',
-        text: req.body.events[0].message.text // ここに指定した文字列がボットの発言になる
+        text: event.message.text // ここに指定した文字列がボットの発言になる
       }]
-    },
-    auth: {
-      bearer: 'Channel Access Token' // ここは自分のtokenに書き換える
-    },
-    json: true
+    }).then((response) => {
+      console.log(JSON.stringify(response))
+    }).catch((error) => {
+      console.log(error)
+    })
   }
-  request(options, (err, response, body) => {
-    console.log(JSON.stringify(response))
-  })
-  res.send('OK')
 })
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('server starting on PORT:' + process.env.PORT)
+const port = process.env.PORT || 3000
+app.listen(port, () => {
+  console.log('server starting on PORT:' + port)
 })
